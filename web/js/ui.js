@@ -41,8 +41,9 @@ export function store(key, fallback) {
 export function save(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage unavailable */ } }
 
 // shared base-rate filter state (likelihood, impact, mitigation read the same slice)
-export const baseState = store("pbx.baseState", DEFAULT_STATE);
-export function setBase(patch) { Object.assign(baseState, patch); save("pbx.baseState", baseState); }
+// versioned key: bump when DEFAULT_STATE changes meaningfully so stale saved filters don't persist
+export const baseState = store("pbx.baseState.v2", DEFAULT_STATE);
+export function setBase(patch) { Object.assign(baseState, patch); save("pbx.baseState.v2", baseState); }
 
 export function pageHead(title, lede) {
   return h("div", { class: "page-head" }, h("h1", { text: title }), lede ? h("p", { class: "lede", text: lede }) : null);
@@ -135,7 +136,7 @@ export function baseFilters(onChange, extra = []) {
     field("Direction", segmented([["down", "Weaker only"], ["both", "Either way"]], s.direction, (v) => upd({ direction: v }), "Direction")),
     field("Cohort", selectEl(COHORTS, s.cohort, (v) => upd({ cohort: v }))),
     checkbox("Ignore 1971–73 Bretton Woods collapse", s.excludeBW, (v) => upd({ excludeBW: v })),
-    checkbox("Drop spells with unknown start", s.excludeLeftCensored, (v) => upd({ excludeLeftCensored: v })),
+    checkbox("Drop pegs already in place in 1940 (start unknown)", s.excludeLeftCensored, (v) => upd({ excludeLeftCensored: v })),
     ...extra,
   );
 }

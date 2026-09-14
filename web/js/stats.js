@@ -9,7 +9,7 @@ export const DEFAULT_STATE = {
   realign: 10,            // count in-peg step realignments >= this % as breaks (0 = don't count)
   direction: "down",      // "down" excludes appreciations; "both" counts any break
   excludeBW: true,        // ignore the 1971-73 Bretton Woods collapse (anchor itself broke)
-  excludeLeftCensored: true,
+  excludeLeftCensored: false, // pegs already in place in 1940: true age unknown (ages understated), but most old-peg evidence
   cohort: "all",          // all | usd | hydro | hydro_usd | gcc
 };
 
