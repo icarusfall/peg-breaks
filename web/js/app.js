@@ -1,4 +1,4 @@
-import { h } from "./ui.js";
+import { h, loadJSON } from "./ui.js";
 import { hideTooltip } from "./charts.js";
 import home from "./pages/home.js";
 import gulf from "./pages/gulf.js";
@@ -49,6 +49,14 @@ navToggle.addEventListener("click", () => {
   nav.classList.toggle("open");
   navToggle.setAttribute("aria-expanded", String(nav.classList.contains("open")));
 });
+
+// FRED API terms require this notice whenever FRED-sourced data is displayed
+loadJSON("data/processed/gcc.json").then((g) => {
+  if (!g.fred_api) return;
+  document.querySelector(".site-footer").appendChild(h("p", {},
+    "This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis. ",
+    h("a", { href: "https://fred.stlouisfed.org/docs/api/terms_of_use.html", target: "_blank", rel: "noopener", text: "FRED® API Terms of Use" })));
+}).catch(() => {});
 
 window.addEventListener("hashchange", render);
 render();

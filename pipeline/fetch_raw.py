@@ -47,6 +47,19 @@ YAHOO_TICKERS = [
 ]
 
 
+def dotenv() -> dict:
+    """Minimal .env reader (repo root, git-ignored) so API keys never live in code."""
+    env = RAW.parents[1] / ".env"
+    if not env.exists():
+        return {}
+    out = {}
+    for line in env.read_text(encoding="utf-8").splitlines():
+        if "=" in line and not line.lstrip().startswith("#"):
+            k, v = line.split("=", 1)
+            out[k.strip()] = v.strip().strip('"').strip("'")
+    return out
+
+
 def get(url: str, **kw) -> requests.Response:
     for attempt in range(4):
         try:
@@ -93,7 +106,7 @@ def fetch_bis(force: bool):
 
 def fetch_market(force: bool):
     p = RAW / "brent.csv"
-    key = os.environ.get("FRED_API_KEY")
+    key = os.environ.get("FRED_API_KEY") or dotenv().get("FRED_API_KEY")
     if (force or not p.exists()) and key:
         # FRED terms prohibit scraping fredgraph.csv; the API with a registered key is the permitted route.
         # One series, one request. Brent (DCOILBRENTEU) is EIA data redistributed by FRED.

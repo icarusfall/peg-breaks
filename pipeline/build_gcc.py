@@ -95,7 +95,8 @@ def main():
         brent["value"] = pd.to_numeric(brent["value"], errors="coerce")
         brent = brent.dropna()
         b = pd.Series(brent["value"].values, index=pd.to_datetime(brent["date"]))
-        out["brent_source"] = "FRED DCOILBRENTEU (Brent spot, EIA)"
+        out["brent_source"] = "EIA Brent spot (DCOILBRENTEU) via the FRED® API"
+        out["fred_api"] = True  # FRED API terms: app must display their notice (web/js/app.js does)
     else:
         b = yahoo["BZ=F"].dropna()
         out["brent_source"] = "Yahoo BZ=F (ICE Brent front-month futures)"
