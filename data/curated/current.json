@@ -1,0 +1,74 @@
+{
+  "as_of": "2026-09-14",
+  "headline": "The Hormuz closure is not a uniform windfall for Gulf pegs. It sorts them by whether they can still export.",
+  "key_points": [
+    {
+      "title": "High prices help only those who can still ship",
+      "body": "Saudi Arabia can move crude to Yanbu on the Red Sea (East-West pipeline, ~5 mb/d design, reported ~7 mb/d), and the UAE to Fujairah (ADCOP, ~1.5–1.8 mb/d). Qatar's LNG, Kuwait's crude, Bahrain's refined products and most of Iraq's oil have no route that avoids the strait. On Reuters estimates, March 2026 oil revenue rose year on year for Saudi Arabia and Oman but fell for Qatar, Kuwait and Iraq."
+    },
+    {
+      "title": "Volumes have fallen faster than prices have risen, even for Saudi Arabia",
+      "body": "Reported crude output fell from about 10.1 to 6.9 mb/d in Saudi Arabia between February and April 2026, from 3.4 to 2.0 mb/d in the UAE, and from 2.6 to 0.6 mb/d in Kuwait. With Brent around $105–110, Saudi and UAE revenue is roughly holding up. Qatar shipped 18 LNG cargoes in the first six months of the war against 509 a year earlier, and strikes knocked out ~17% of its LNG capacity for 3–5 years."
+    },
+    {
+      "title": "The anchor is tightening into a Gulf downturn",
+      "body": "Pegs import US monetary policy. The Fed held at 3.50–3.75% in July with three dissents in favour of hiking, and futures price hikes into 2027. For Qatar (IMF: roughly −9% growth in 2026), Kuwait and Bahrain, higher dollar rates arrive during a contraction. Historically that mix (anchor tightening plus local recession, as in the 1992 ERM breaks) raises the political cost of a peg. The Gulf's commitment and buffers are, however, far stronger."
+    },
+    {
+      "title": "Buffers are defended with stocks, not flows",
+      "body": "A peg breaks when usable foreign assets run out relative to potential capital flight. That is not when revenue dips. GCC sovereign wealth funds hold roughly $4–6tn. Qatar's central bank reserves rose ~10% year on year to QR220.5bn by July 2026, and Qatar repatriated ~$13bn to support local banks, the same playbook as in 2017. A blockade also cuts imports, which reduces ordinary dollar demand."
+    },
+    {
+      "title": "Markets are not pricing a break",
+      "body": "Gulf CDS rose only 7–23bp into their March peaks and have mostly retraced. Year to date to 24 August, Saudi CDS were −9bp, UAE +6, Qatar +6, Kuwait +4 and Oman +7, with Bahrain the clear outlier. Onshore spot for SAR, AED and QAR remains at parity in BIS data. Watch offshore quotes and 12m forward points, which this tool cannot source for free, for the first signs of stress."
+    },
+    {
+      "title": "Where the break risk actually sits",
+      "body": "Within the region, stress is in Iraq (the parallel dinar is ~17% weaker than official) and Bahrain (IMF: −3.8% growth, debt >120% of GDP, reserves around a month of imports, refinery damaged, dependent on a UAE swap line). Among your three exposures, Qatar carries the most fundamental damage but also by far the largest buffers per capita. Its 2017 precedent points to offshore dislocation rather than an onshore devaluation."
+    },
+    {
+      "title": "Tail risks specific to this conflict",
+      "body": "(1) Houthi control near Bab el-Mandeb threatens the Red Sea leg of Saudi Arabia's Yanbu bypass. (2) Direct strikes on export, desalination or financial infrastructure. (3) Capital flight by residents and expatriates rather than foreign investors. (4) Offshore liquidity withdrawal by foreign banks, as for QAR in 2017, which can hit a proxy-hedged investor's execution even while onshore pegs hold."
+    }
+  ],
+  "scorecard": [
+    {"ccy": "SAR", "country": "Saudi Arabia", "peg": "3.75 / USD since 1986", "hormuz_bypass": "Yes: East-West pipeline to Yanbu (Red Sea)", "imf_growth_2026": "3.1% (Apr WEO); 1.7% reported Jul", "fx_reserves": "$464bn (2024), ~15 months of imports", "fiscal_breakeven": "~$92–113/bbl (IMF; PIF-inclusive higher)", "cds_ytd": "−9bp", "stress": "low", "watch": "Red Sea / Bab el-Mandeb security; SAMA net foreign assets; 12m forward points"},
+    {"ccy": "AED", "country": "UAE", "peg": "3.6725 / USD since 1997", "hormuz_bypass": "Partial: ADCOP to Fujairah (~1.5–1.8 mb/d), itself attacked; doubling targeted by 2027", "imf_growth_2026": "3.1% (Apr WEO)", "fx_reserves": "$238bn (2024); SWFs ~$1.95tn", "fiscal_breakeven": "Below current oil prices", "cds_ytd": "+6bp", "stress": "low", "watch": "Jebel Ali and aviation/tourism disruption; Dubai real estate and bank deposits; Fujairah strikes"},
+    {"ccy": "QAR", "country": "Qatar", "peg": "3.64 / USD (formal 2001)", "hormuz_bypass": "No: LNG exports near zero; ~17% of capacity destroyed", "imf_growth_2026": "≈ −9% (Apr WEO)", "fx_reserves": "QCB QR220.5bn (Jul 2026, +10% y/y); very large QIA assets", "fiscal_breakeven": "Lowest in GCC pre-war (~$44/bbl), but volumes collapsed", "cds_ytd": "+6bp", "stress": "moderate", "watch": "Offshore QAR quotes vs 3.64; non-resident deposits at Qatari banks; QIA liquidations; force majeure extensions"},
+    {"ccy": "KWD", "country": "Kuwait", "peg": "Basket (USD-dominated) since 2007", "hormuz_bypass": "No: output ~0.6 mb/d in April", "imf_growth_2026": "≈ −0.6% (Apr WEO)", "fx_reserves": "KIA assets ~5.8x GDP", "fiscal_breakeven": "FY26/27 draft deficit KD9.8bn (~$32bn)", "cds_ytd": "+4bp", "stress": "moderate", "watch": "Budget financing / debt law; KIA drawdowns"},
+    {"ccy": "BHD", "country": "Bahrain", "peg": "0.376 / USD (effectively since 1980)", "hormuz_bypass": "No: Bapco refinery hit; exports throttled", "imf_growth_2026": "−3.8%", "fx_reserves": "~1 month of imports", "fiscal_breakeven": "~$137/bbl pre-war (highest in GCC)", "cds_ytd": "Highest in GCC", "stress": "elevated", "watch": "Size and speed of GCC support (UAE AED20bn swap); forward points; CDS"},
+    {"ccy": "OMR", "country": "Oman", "peg": "0.3845 / USD since 1986", "hormuz_bypass": "Yes: terminals outside the strait", "imf_growth_2026": "n/a", "fx_reserves": "n/a", "fiscal_breakeven": "n/a", "cds_ytd": "+7bp (level ~76bp, 2nd highest)", "stress": "low", "watch": "Security of Gulf of Oman terminals"}
+  ],
+  "timeline": [
+    {"date": "2026-02-28", "event": "US–Israeli strikes on Iran; war begins", "src": "https://en.wikipedia.org/wiki/2026_Strait_of_Hormuz_crisis"},
+    {"date": "2026-03-02", "event": "IRGC confirms closure of the Strait of Hormuz", "src": "https://en.wikipedia.org/wiki/2026_Strait_of_Hormuz_crisis"},
+    {"date": "2026-03-08", "event": "Brent above $100 for the first time in four years (peak ~$126)", "src": "https://en.wikipedia.org/wiki/2026_Strait_of_Hormuz_crisis"},
+    {"date": "2026-03-19", "event": "Missile strikes on Ras Laffan knock out ~17% of Qatar's LNG capacity (12.8 mtpa; 3–5 years to repair)", "src": "https://www.euronews.com/2026/08/03/second-tanker-with-qatari-lng-struck-in-hormuz-within-a-month-as-force-majeure-widens"},
+    {"date": "2026-03-24", "event": "QatarEnergy declares force majeure on some LNG contracts", "src": "https://www.aljazeera.com/news/2026/3/24/qatarenergy-declares-force-majeure-on-some-lng-contracts"},
+    {"date": "2026-04-08", "event": "Temporary US–Iran ceasefire; shipping stays at a trickle and the strait re-closes on 18 Apr", "src": "https://aljazeera.com/economy/2026/4/10/shipping-in-strait-of-hormuz-at-a-trickle-despite-us-iran-ceasefire"},
+    {"date": "2026-04-16", "event": "IMF regional outlook: Qatar ≈ −9%, Kuwait −0.6%, Saudi Arabia and UAE +3.1% in 2026", "src": "https://www.agbi.com/economy/2026/04/imf-warns-of-wars-growing-pressure-on-gulf-public-finances/"},
+    {"date": "2026-06-17", "event": "Trump–Pezeshkian memorandum to end war and blockades; Iran re-closes the strait on 20 Jun", "src": "https://en.wikipedia.org/wiki/2026_Strait_of_Hormuz_crisis"},
+    {"date": "2026-06-29", "event": "Bolivia floats the boliviano after 15-year peg", "src": "https://www.riotimesonline.com/bolivia-floating-exchange-rate-live-paz-imf-2026/"},
+    {"date": "2026-07-08", "event": "Interim truce breaks down after Iranian strikes on commercial ships", "src": "https://en.wikipedia.org/wiki/2026_Strait_of_Hormuz_crisis"},
+    {"date": "2026-07-29", "event": "Fed holds at 3.50–3.75% with three hawkish dissents", "src": "https://www.cnbc.com/2026/07/29/fed-rate-decision-july-2026.html"},
+    {"date": "2026-08-15", "event": "Qatar repatriates ~$13bn to shore up domestic banks", "src": "https://www.agbi.com/analysis/banking-finance/2026/08/qatar-repatriates-13bn-to-shore-up-domestic-banks/"},
+    {"date": "2026-08-24", "event": "AGBI: GCC CDS mostly back below or near pre-war levels; Bahrain heavily exposed", "src": "https://www.agbi.com/analysis/markets/2026/08/gulf-credit-risk-recedes-but-bahrain-still-heavily-exposed/"},
+    {"date": "2026-08-25", "event": "US Navy confirms mine-clearing in the strait (>100 suspected mines)", "src": "https://en.wikipedia.org/wiki/2026_Strait_of_Hormuz_crisis"},
+    {"date": "2026-08-31", "event": "QatarEnergy extends LNG cancellations into November", "src": "https://www.euronews.com/business/2026/08/31/qatarenergy-extends-lng-cancellations-into-november-as-hormuz-disruption-drags-on"},
+    {"date": "2026-09-16", "event": "FOMC decision; markets lean toward a hike to 3.75–4.00%", "src": "https://www.cnbc.com/2026/07/29/fed-rate-decision-july-2026.html"}
+  ],
+  "sources": [
+    {"title": "Dallas Fed — What the closure of the Strait of Hormuz means for the global economy (Mar 2026)", "url": "https://www.dallasfed.org/research/economics/2026/0320"},
+    {"title": "SPF — The petrodollar order under strain (Jun 2026; Reuters revenue and output estimates)", "url": "https://www.spf.org/iina/en/articles/takahashi_10.html"},
+    {"title": "CNBC — The two oil pipelines helping Saudi Arabia and UAE bypass Hormuz", "url": "https://www.cnbc.com/2026/03/12/strait-of-hormuz-oil-pipelines-iran-war-saudi-arabia-uae.html"},
+    {"title": "IEA — Strait of Hormuz (bypass capacities)", "url": "https://www.iea.org/about/oil-security-and-emergency-response/strait-of-hormuz"},
+    {"title": "Middle East Council — Gulf SWFs and the cost of crisis resilience (May 2026; reserves, breakevens)", "url": "https://mecouncil.org/publication/gulf-sovereign-wealth-funds-and-the-cost-of-crisis-resilience/"},
+    {"title": "AGBI — Gulf credit risk recedes but Bahrain still heavily exposed (Aug 2026)", "url": "https://www.agbi.com/analysis/markets/2026/08/gulf-credit-risk-recedes-but-bahrain-still-heavily-exposed/"},
+    {"title": "The Peninsula — QCB monetary survey, July 2026", "url": "https://thepeninsulaqatar.com/article/25/08/2026/monetary-deposit-institutions-surveys-highlight-strong-banking-capitalisation-in-july-2026"},
+    {"title": "AGBI — Bahrain's economy contracts after Iran war hits oil output (Aug 2026)", "url": "https://www.agbi.com/economy/2026/08/bahrains-economy-contracts-after-iran-war-hits-oil-output/"},
+    {"title": "The New Arab — UAE hands Bahrain financial lifeline", "url": "https://www.newarab.com/news/uae-hands-bahrain-financial-lifeline-iran-war-shocks-economy"},
+    {"title": "Bloomberg — Qatar extends LNG force majeure (Aug 2026)", "url": "https://www.bloomberg.com/news/articles/2026-08-28/qatar-extends-lng-force-majeure-as-hormuz-traffic-remains-halted"},
+    {"title": "Congress.gov CRS — The Strait of Hormuz: security developments", "url": "https://www.congress.gov/crs-product/R45281"}
+  ],
+  "caveat": "Compiled from news and official sources available on 14 September 2026. Several figures come from secondary reporting of Reuters/IMF numbers. Verify anything decision-relevant against primary sources (IMF WEO/REO, central bank releases, Bloomberg or Refinitiv for forwards and offshore quotes)."
+}

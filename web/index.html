@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Peg Break Explorer</title>
+  <meta name="description" content="How likely is a currency peg to break, how bad does it get, what signals come first, and how to hedge the tail — built for proxy-hedged GCC exposure.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%232a78d6'/><path d='M6 11h20M6 21h9l3-6 3 12' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#/">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" class="brand-bg"/><path d="M6 11h20M6 21h9l3-6 3 12" class="brand-mark"/></svg>
+        <span>Peg Break Explorer</span>
+      </a>
+      <button class="nav-toggle" aria-expanded="false" aria-controls="nav">Menu</button>
+      <nav id="nav" class="nav" aria-label="Sections">
+        <a href="#/gulf">Gulf 2026</a>
+        <a href="#/likelihood">How likely?</a>
+        <a href="#/impact">How bad?</a>
+        <a href="#/signals">Early signals</a>
+        <a href="#/episodes">Episodes</a>
+        <a href="#/mitigation">Mitigation</a>
+        <a href="#/method">Method</a>
+      </nav>
+      <button class="theme-toggle" type="button" aria-label="Toggle colour theme" title="Toggle theme">◐</button>
+    </div>
+  </header>
+  <main id="main" class="wrap" tabindex="-1">
+    <p class="loading">Loading data…</p>
+  </main>
+  <footer class="site-footer wrap">
+    <p>Research tool, not investment advice. Data: Ilzetzki–Reinhart–Rogoff regime classification, BIS exchange rates, FRED, Yahoo Finance, and cited news sources. See <a href="#/method">Method</a> for limitations.</p>
+  </footer>
+  <div id="tooltip" class="tooltip" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
