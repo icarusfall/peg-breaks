@@ -63,7 +63,7 @@ export default async function gulf() {
         tile("Offshore vs parity, now", dev ? bp(dev.last) : "–", p.offshore_quality?.suspect ? "suspect data, see note below" : p.parity ? `parity ${p.parity}` : p.since),
         tile("Largest offshore gap, 12m", dev ? `${Math.round(dev.max_abs_365d)}bp` : "–", dev ? `90d: ${Math.round(dev.max_abs_90d)}bp` : ""),
       ),
-      p.offshore_quality?.suspect ? h("p", { class: "callout warn small", text: `Data quality: ${p.offshore_quality.note}` }) : null,
+      ...(p.offshore_quality?.suspect ? [h("p", { class: "callout warn small", text: `Data quality: ${p.offshore_quality.note}` })] : []),
       card({
         title: `${view.ccy} per USD: onshore vs offshore proxy`,
         sub: `${p.country} · ${p.since}. Off-parity Yahoo prints are shown only if they persist for 5+ days, which filters bad ticks but keeps real dislocations such as QAR in 2017.`,

@@ -55,7 +55,7 @@ export default async function likelihood() {
             h("div", { class: "ink-2 small", text: isFinite(hz.ciHi) ? `The data are consistent with up to ${pct(hz.ciHi, 2)} a year (95% upper bound), or ${pct(1 - Math.exp(-hz.ciHi * calc.horizon), 1)} over ${calc.horizon}y.` : "" }),
           ),
         ),
-        thin ? h("p", { class: "callout warn small", text: "Thin data: few pegs in this cohort have survived this long. Treat the number as indicative, widen the cohort, or lower the age." }) : null,
+        ...(thin ? [h("p", { class: "callout warn small", text: "Thin data: few pegs in this cohort have survived this long. Treat the number as indicative, widen the cohort, or lower the age." })] : []),
       );
     };
     const ageInput = numberInput(calc.age, (v) => { calc.age = Math.max(0, v); renderResult(); }, { step: 1, min: 0, max: 80 });

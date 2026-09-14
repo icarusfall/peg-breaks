@@ -15,6 +15,14 @@ app = FastAPI(title="Peg Break Explorer", docs_url=None, redoc_url=None, openapi
 app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
+@app.middleware("http")
+async def revalidate_assets(request, call_next):
+    # ES modules are otherwise heuristically cached, so a redeploy could serve stale JS
+    response = await call_next(request)
+    response.headers.setdefault("Cache-Control", "no-cache")
+    return response
+
+
 @app.get("/healthz")
 def healthz():
     return {"ok": True}
