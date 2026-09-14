@@ -41,8 +41,11 @@ export default async function method() {
         <ul>
           <li><b>IRR classification</b>: Ilzetzki, Reinhart &amp; Rogoff (2019, QJE; 2021, Handbook of International Economics), <a href="https://www.ilzetzki.com/irr-data" target="_blank" rel="noopener">ilzetzki.com/irr-data</a>. Cite when using.</li>
           <li><b>BIS US dollar exchange rates</b> (WS_XRU), daily and monthly, bulk download from <a href="https://data.bis.org" target="_blank" rel="noopener">data.bis.org</a>. Source: BIS; attribution required.</li>
-          <li><b>Yahoo Finance</b> via the unofficial <code>yfinance</code> library, with Brent from <code>BZ=F</code> (${gcc.brent_source}). Yahoo's terms restrict automated collection and redistribution, so this is suitable for internal research only. For production use or wider distribution, replace it with a licensed feed (Bloomberg, LSEG/Refinitiv) for offshore spot, forwards and NDFs.</li>
-          <li><b>FRED</b>: not used in the published data. FRED's terms prohibit scraping. If you set <code>FRED_API_KEY</code>, the pipeline makes one API call for Brent (EIA series DCOILBRENTEU). The app must then display "This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis", and third-party series need their owner's permission beyond personal use.</li>
+          <li><b>Yahoo Finance</b> via the unofficial <code>yfinance</code> library, for offshore-proxy and episode currency quotes${gcc.fred_api ? "" : " and Brent futures (<code>BZ=F</code>)"}. Yahoo's terms restrict automated collection and redistribution, so this is suitable for internal research only. For production use or wider distribution, replace it with a licensed feed (Bloomberg, LSEG/Refinitiv) for offshore spot, forwards and NDFs.</li>
+          <li><b>FRED</b>: ${gcc.fred_api
+            ? "Brent is the EIA spot series DCOILBRENTEU, retrieved with one call to the official FRED® API using a registered key. <i>This product uses the FRED® API but is not endorsed or certified by the Federal Reserve Bank of St. Louis.</i>"
+            : "not used in the published data. If <code>FRED_API_KEY</code> is set, the pipeline makes one API call for Brent (EIA series DCOILBRENTEU)."}
+            FRED's terms prohibit scraping, so the pipeline only uses the API. Third-party series need their owner's permission beyond personal use; EIA data are US-government public information.</li>
           <li><b>News and official sources</b> for episodes and the 2026 briefing are linked where cited.</li>
         </ul>`),
       sec("Refreshing the data", `
