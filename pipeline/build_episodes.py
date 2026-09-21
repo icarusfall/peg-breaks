@@ -19,6 +19,36 @@ DAILY_OFFSETS = {"1d": 1, "1w": 5, "1m": 21, "3m": 63, "6m": 126, "12m": 252, "2
 MONTHLY_OFFSETS = {"1m": 1, "3m": 3, "6m": 6, "12m": 12, "24m": 24}
 
 
+def pack(chg: pd.Series, offsets: dict, k24: int) -> dict:
+    chg = chg.dropna()
+    d = {"chg": {lab: float(chg.iloc[k - 1]) for lab, k in offsets.items() if len(chg) >= k}}
+    seg = chg.iloc[:k24]
+    if len(seg):
+        d["max_dep_24m"] = float(seg.min())
+    return d
+
+
+def alt_stats(lu: pd.Series, gb: pd.Series | None, d0: pd.Timestamp, freq: str) -> dict:
+    """Moves in USD terms, in GBP terms (unhedged cross), and the shortfall of a USD/GBP
+    proxy hedge versus a perfect local-currency hedge, for a GBP-based investor."""
+    offsets = DAILY_OFFSETS if freq == "D" else MONTHLY_OFFSETS
+    k24 = 504 if freq == "D" else 24
+    before, after = lu.loc[: d0 - pd.Timedelta(days=1)], lu.loc[d0:]
+    if before.empty or after.empty:
+        return {}
+    base, bdate = float(before.iloc[-1]), before.index[-1]
+    usd_chg = base / after - 1
+    out = {"usd": pack(usd_chg, offsets, k24)}
+    if gb is not None:
+        g = gb.reindex(gb.index.union(lu.index)).sort_index().ffill()
+        g0 = g.loc[:bdate].dropna()
+        if len(g0):
+            ratio = g.reindex(after.index) / float(g0.iloc[-1])  # GBP per USD relative to base
+            out["gbp"] = pack((1 + usd_chg) * ratio - 1, offsets, k24)
+            out["proxy"] = pack(usd_chg * ratio, offsets, k24)
+    return out
+
+
 def main():
     cur = json.loads((CURATED / "episodes.json").read_text(encoding="utf-8"))
     bis_d, bis_m = bis_series("D"), bis_series("M")
@@ -43,6 +73,21 @@ def main():
         if anchor is not None:
             s = (s / anchor.reindex(s.index)).dropna()
         return s, freq
+
+    def local_usd_for(spec):
+        """The same series expressed as local currency per USD (for USD / GBP views)."""
+        src = spec["source"]
+        if src == "bis_d":
+            return bis_d.get(spec["area"])
+        if src == "bis_m":
+            return bis_m.get(spec["area"])
+        t = spec["ticker"]
+        if t not in yahoo:
+            return None
+        s = despike(yahoo[t])
+        if spec.get("quote") == "per_anchor":  # EURxxx tickers: convert via EUR per USD
+            s = (s * bis_d["XM"].reindex(s.index, method="ffill")).dropna()
+        return s
 
     out = []
     for ep in cur["episodes"]:
@@ -98,6 +143,10 @@ def main():
             if ep.get("peg"):
                 stats["max_dev_from_peg"] = float((w / ep["peg"] - 1).abs().max())
             entry["stats"] = stats
+            lu = local_usd_for(spec)
+            if lu is not None:
+                gb = None if ep.get("iso3") == "GBR" else (bis_d if freq == "D" else bis_m)["GB"]
+                entry["alt"] = alt_stats(lu, gb, d0, freq)
             rec["series"].append(entry)
         out.append(rec)
 

@@ -148,6 +148,27 @@ def value_change(x: pd.Series, base: pd.Period, k: int):
     return float(np.exp(-(b - a)) - 1)
 
 
+HZ = (1, 3, 6, 12, 24)
+
+
+def proxy_change(usd: pd.Series | None, gbp: pd.Series | None, base: pd.Period, k: int):
+    """GBP investor holding the local currency and hedging with a short USD/GBP forward:
+    shortfall versus a perfect local-currency hedge, as a fraction of the initial GBP value.
+    = (local value change vs USD) x (GBP per USD at base+k / at base)."""
+    r = value_change(usd, base, k) if usd is not None else None
+    if r is None or gbp is None:
+        return None
+    a, b = gbp.get(base), gbp.get(base + k)
+    if a is None or b is None or pd.isna(a) or pd.isna(b):
+        return None
+    return float(r * np.exp(b - a))
+
+
+def worst(fn):
+    vals = [v for v in (fn(k) for k in range(1, 25)) if v is not None]
+    return min(vals) if vals else None
+
+
 def path(x: pd.Series | None, base: pd.Period, lo=-24, hi=36):
     if x is None or pd.isna(x.get(base, np.nan)):
         return None
@@ -352,6 +373,20 @@ def main():
                             spell["max_app_24"] = max(vals) if vals else None
                         spell["path_anchor"] = path(x, base)
                         spell["path_usd"] = path(usd, base)
+                        # GBP-investor views (not meaningful for sterling itself)
+                        g = bis.get("GB") if iso3 != "GBR" else None
+                        xg = usd - g.reindex(usd.index) if (usd is not None and g is not None) else None
+                        spell["chg_gbp"] = {h: value_change(xg, base, h) for h in HZ} if xg is not None else None
+                        spell["chg_proxy"] = {h: proxy_change(usd, g, base, h) for h in HZ} if xg is not None else None
+                        spell["path_gbp"] = path(xg, base)
+                        spell["path_proxy"] = [None if (c := proxy_change(usd, g, base, k)) is None else round(100 * (1 + c), 2)
+                                               for k in range(-24, 37)] if xg is not None else None
+                        spell["max_dep"] = {
+                            "anchor": worst(lambda k: value_change(x, base, k)) if x is not None else None,
+                            "usd": worst(lambda k: value_change(usd, base, k)) if usd is not None else None,
+                            "gbp": worst(lambda k: value_change(xg, base, k)) if xg is not None else None,
+                            "proxy": worst(lambda k: proxy_change(usd, g, base, k)) if xg is not None else None,
+                        }
                         ev_month = pe + 1
                         spell["event"] = str(ev_month)
                         spell["bretton_woods"] = pd.Period("1971-08", "M") <= ev_month <= pd.Period("1973-12", "M")

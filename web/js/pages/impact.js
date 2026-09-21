@@ -11,10 +11,24 @@ export function primaryStats(ep) {
   return s ? s.stats : null;
 }
 
+/** Episode stats in the chosen basis: anchor (as charted), usd, gbp (unhedged) or proxy (USD-hedged GBP investor). */
+export function statsFor(ep, basis) {
+  if (basis === "anchor") return primaryStats(ep);
+  const s = ep.series.find((x) => !x.missing && x.alt && x.alt[basis]);
+  return s ? s.alt[basis] : null;
+}
+
+const BASIS_NOTE = {
+  anchor: "Against the currency the peg was defined in.",
+  usd: "Against the US dollar.",
+  gbp: "In sterling terms for an unhedged GBP investor: the local currency's move against GBP (the cross rate).",
+  proxy: "Shortfall of a USD/GBP proxy hedge versus a proper local-currency hedge, as a share of the position's initial GBP value.",
+};
+
 export default async function impact() {
   const [data, eps] = await Promise.all([loadJSON("data/processed/regimes.json"), loadJSON("data/processed/episodes.json")]);
   const body = h("div");
-  const basisSeg = field("Measure against", segmented([["anchor", "Anchor currency"], ["usd", "US dollar"]], opt.basis, (v) => { opt.basis = v; save("pbx.impact", opt); draw(); }, "Basis"));
+  const basisSeg = field("Measure against", segmented([["anchor", "Anchor"], ["usd", "US dollar"], ["gbp", "GBP, unhedged"], ["proxy", "GBP, USD-proxy hedged"]], opt.basis, (v) => { opt.basis = v; save("pbx.impact", opt); draw(); }, "Basis"));
   const root = h("div", {},
     pageHead("If a peg breaks, how bad does it get?",
       "The change in the currency's value after every break in the sample (negative = weaker), measured from the last month on the peg. Curated daily episodes below show the first-day gap that monthly averages smooth over."),
@@ -22,11 +36,12 @@ export default async function impact() {
 
   function draw() {
     const lives = buildLives(data, baseState);
-    const key = opt.basis === "usd" ? "chg_usd" : "chg_anchor";
+    const key = `chg_${opt.basis}`;
+    const worstOf = (e) => (e.max_dep && e.max_dep[opt.basis] !== undefined && e.max_dep[opt.basis] !== null ? e.max_dep[opt.basis] : opt.basis === "anchor" ? e.max_dep_24 : null);
     const events = lives.filter((l) => l.event).map((l) => ({ ...l.eventSpell, name: l.name, age: l.exit / 12, iso3: l.iso3 }));
     const get = (e, hz) => (e[key] && e[key][hz] !== undefined ? e[key][hz] : (opt.basis === "anchor" && e.chg_usd ? e.chg_usd[hz] : null));
     const rows = HORIZONS.map((hz) => ({ label: `${hz} month${hz > 1 ? "s" : ""}`, ...summarize(events.map((e) => get(e, hz))) }));
-    rows.push({ label: "Worst in 24m", ...summarize(events.map((e) => e.max_dep_24)) });
+    rows.push({ label: "Worst in 24m", ...summarize(events.map(worstOf)) });
     const s12 = rows[3];
     const vals12 = events.map((e) => get(e, 12)).filter((v) => v !== null && v !== undefined);
     const big = vals12.filter((v) => v <= -0.2).length;
@@ -48,13 +63,13 @@ export default async function impact() {
     });
     const rangeCard = card({
       title: "Distribution of value change after a break",
-      sub: "Dot = median; bar = middle half of breaks; line = 10th to 90th percentile.",
+      sub: `${BASIS_NOTE[opt.basis]} Dot = median; bar = middle half of breaks; line = 10th to 90th percentile.`,
       body: rangeEl,
       tableFn: () => table([{ label: "Horizon", key: "label" }, { label: "n", key: "n", r: true }, { label: "10th", key: "p10", r: true, fmt: (v) => spct(v, 1) }, { label: "25th", key: "p25", r: true, fmt: (v) => spct(v, 1) }, { label: "Median", key: "p50", r: true, fmt: (v) => spct(v, 1) }, { label: "75th", key: "p75", r: true, fmt: (v) => spct(v, 1) }, { label: "90th", key: "p90", r: true, fmt: (v) => spct(v, 1) }], rows),
     });
 
     // curated daily episodes
-    const breaks = eps.episodes.filter((e) => e.kind === "break").map((e) => ({ e, st: primaryStats(e) })).filter((x) => x.st)
+    const breaks = eps.episodes.filter((e) => e.kind === "break").map((e) => ({ e, st: statsFor(e, opt.basis) })).filter((x) => x.st && x.st.chg)
       .sort((a, b) => (a.st.chg["12m"] ?? a.st.max_dep_24m ?? 0) - (b.st.chg["12m"] ?? b.st.max_dep_24m ?? 0));
     const cls = (v) => (v < -0.0005 ? "neg" : v > 0.0005 ? "pos" : "");
     const epCard = card({
@@ -71,8 +86,9 @@ export default async function impact() {
     });
 
     const byId = Object.fromEntries(eps.episodes.map((e) => [e.id, e]));
-    const s = (id, k = "12m") => { const st = primaryStats(byId[id]); return st ? (k === "max" ? st.max_dep_24m : st.chg[k]) : null; };
-    const qarOff = byId["qar-2017"]?.series.find((x) => x.key === "offshore")?.stats?.max_dev_from_peg;
+    const s = (id, k = "12m") => { const st = byId[id] && statsFor(byId[id], opt.basis); return st ? (k === "max" ? st.max_dep_24m : st.chg[k]) : null; };
+    const qarSeries = byId["qar-2017"]?.series.find((x) => x.key === "offshore");
+    const qarOff = opt.basis === "anchor" || opt.basis === "usd" ? qarSeries?.stats?.max_dev_from_peg : (qarSeries?.alt?.[opt.basis]?.max_dep_24m !== undefined ? -qarSeries.alt[opt.basis].max_dep_24m : null);
     const scen = [
       { name: "Offshore-only dislocation, onshore holds", ex: "Qatar 2017", loss: qarOff ? -qarOff : null, note: "Mark-to-market/execution loss for anyone dealing offshore; reversed within ~6 months." },
       { name: "One-off step to a new peg", ex: "Oman 1986, UK 1967, Iraq 2020, Turkmenistan 2015", loss: [s("omr-1986"), s("gbp-1967"), s("iqd-2020"), s("tmt-2015")], note: "The historical GCC template. Oman's step was ~10% (the monthly average shows less)." },
@@ -96,11 +112,25 @@ export default async function impact() {
         { label: "Type", get: (e) => (e.reason === "realign" ? `Step ${spct(e.realign_pct, 0)}` : data.codes[e.next_code] || "Exit (BIS/curated)") },
         { label: "1m", r: true, get: (e) => get(e, 1), fmt: (v) => spct(v, 0), cls },
         { label: "12m", r: true, get: (e) => get(e, 12), fmt: (v) => spct(v, 0), cls },
-        { label: "Worst 24m", r: true, key: "max_dep_24", fmt: (v) => spct(v, 0), cls },
+        { label: "Worst 24m", r: true, get: worstOf, fmt: (v) => spct(v, 0), cls },
       ], events.slice().sort((a, b) => (get(a, 12) ?? 0) - (get(b, 12) ?? 0)), { onRowClick: (e) => { const ep = findEpisode(eps, e.iso3, e.event); if (ep) location.hash = `#/episode/${ep.id}`; }, maxHeight: "480px" }),
     });
 
-    body.replaceChildren(tiles, h("div", { class: "grid grid-2 section" }, rangeCard, fanCard), h("div", { class: "section" }, scenCard), h("div", { class: "grid grid-2 section" }, epCard, evCard));
+    const gbpNote = [];
+    if (opt.basis === "gbp" || opt.basis === "proxy") {
+      // sterling's value vs USD over the same 12m: (1+chg_usd)/(1+chg_gbp) - 1
+      const gv = events.map((e) => (e.chg_usd && e.chg_gbp && e.chg_usd[12] != null && e.chg_gbp[12] != null ? (1 + e.chg_usd[12]) / (1 + e.chg_gbp[12]) - 1 : null)).filter((v) => v !== null);
+      const gs = summarize(gv);
+      const weaker = gv.filter((v) => v < 0).length;
+      gbpNote.push(h("div", { class: "callout prose section" },
+        h("strong", { text: "GBP investor view. " }),
+        h("span", { text: `In the 12 months after these breaks, sterling's median move against the dollar was ${spct(gs.p50, 1)} (middle half ${spct(gs.p25, 0)} to ${spct(gs.p75, 0)}), and it weakened in ${pct(gv.length ? weaker / gv.length : NaN, 0)} of cases, so there is no reliable co-movement to lean on. ` }),
+        h("span", { text: opt.basis === "proxy"
+          ? "With a USD/GBP proxy hedge, the shortfall against a proper local-currency hedge is the local currency's loss against USD, converted at the new GBP/USD rate: shortfall = loss vs USD × (GBP per USD now ÷ at inception). Sterling weakening against the dollar therefore slightly enlarges the shortfall in GBP; it never offsets it. The GBP rate only rescales the USD loss."
+          : "Unhedged, a GBP investor feels the local currency's move against sterling, so a simultaneous fall in sterling softens the loss. That is not the proxy-hedged position: the 'GBP, USD-proxy hedged' view shows what the hedge leaves behind." })));
+    }
+
+    body.replaceChildren(tiles, ...gbpNote, h("div", { class: "grid grid-2 section" }, rangeCard, fanCard), h("div", { class: "section" }, scenCard), h("div", { class: "grid grid-2 section" }, epCard, evCard));
 
     rangeChart(rangeEl, { rows, xFormat: (v) => spct(v, 0), labelWidth: 96 });
     lineChart(fanEl, {

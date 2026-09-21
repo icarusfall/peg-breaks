@@ -7,7 +7,7 @@ export const DEFAULT_STATE = {
   def: "narrow",          // narrow = pegs/currency boards/<=2% bands; broad adds crawling pegs/bands
   era: 1946,              // exposure counted from this year (delayed entry for older spells)
   realign: 10,            // count in-peg step realignments >= this % as breaks (0 = don't count)
-  direction: "down",      // "down" excludes appreciations; "both" counts any break
+  direction: "down",      // "down" = weakening breaks only; "up" = strengthening only; "both" = any
   excludeBW: true,        // ignore the 1971-73 Bretton Woods collapse (anchor itself broke)
   excludeLeftCensored: false, // pegs already in place in 1940: true age unknown (ages understated), but most old-peg evidence
   cohort: "all",          // all | usd | hydro | hydro_usd | gcc
@@ -35,14 +35,16 @@ export function buildLives(data, state) {
       let close = true, event = false;
       if (s.reason === "realign") {
         const size = s.realign_pct;
+        const dirOK = state.direction === "both" || (state.direction === "up" ? size > 0 : size < 0);
         const counts = state.realign > 0 && size !== null && Math.abs(size) * 100 >= state.realign &&
-          (state.direction === "both" || size < 0) && !(state.excludeBW && s.bretton_woods);
+          dirOK && !(state.excludeBW && s.bretton_woods);
         const next = arr[i + 1];
         const contiguous = next && monthIndex(next.start) === monthIndex(s.end) + 1;
         if (counts) event = true;
         else if (contiguous) close = false;
       } else if (s.reason === "exit") {
-        event = !(state.excludeBW && s.bretton_woods) && !(state.direction === "down" && s.direction === "up");
+        const dirOK = state.direction === "both" || (state.direction === "up" ? s.direction === "up" : s.direction !== "up");
+        event = !(state.excludeBW && s.bretton_woods) && dirOK;
       }
       if (!close) return;
       const start = monthIndex(cur.start), end = monthIndex(s.end);
@@ -151,7 +153,7 @@ export function summarize(values) {
 
 /** Event-study fan: path arrays are index=100 at the last pegged month, offsets -24..+36. */
 export function fan(events, basis = "anchor", minN = 5) {
-  const key = basis === "usd" ? "path_usd" : "path_anchor";
+  const key = `path_${basis}`;
   const rows = [];
   for (let k = 0; k <= 60; k++) {
     const vals = events.map((e) => e[key] ? e[key][k] : null).filter((x) => x !== null && x !== undefined);
