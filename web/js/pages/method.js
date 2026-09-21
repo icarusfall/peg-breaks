@@ -55,7 +55,8 @@ cd pipeline
 python fetch_raw.py            # IRR, BIS bulk, Yahoo (+ FRED API if key set)
 python build_regimes.py
 python build_episodes.py
-python build_gcc.py</code></pre>
+python build_gcc.py
+python build_downloads.py</code></pre>
         <p>Update <code>data/curated/current.json</code> and <code>episodes.json</code> by hand as events develop, then commit <code>data/processed</code>. Railway redeploys on push.</p>`),
     ),
     h("div", { class: "section" }, card({

@@ -8,9 +8,10 @@ import signals from "./pages/signals.js";
 import episodes from "./pages/episodes.js";
 import mitigation from "./pages/mitigation.js";
 import method from "./pages/method.js";
+import data from "./pages/data.js";
 
-const routes = { "": home, gulf, likelihood, impact, signals, episodes, episode: episodes, mitigation, method };
-const TITLES = { "": "Peg Break Explorer", gulf: "Gulf 2026", likelihood: "How likely?", impact: "How bad?", signals: "Early signals", episodes: "Episodes", episode: "Episode", mitigation: "Mitigation", method: "Method" };
+const routes = { "": home, gulf, likelihood, impact, signals, episodes, episode: episodes, mitigation, method, data };
+const TITLES = { "": "Peg Break Explorer", gulf: "Gulf 2026", likelihood: "How likely?", impact: "How bad?", signals: "Early signals", episodes: "Episodes", episode: "Episode", mitigation: "Mitigation", method: "Method", data: "Download data" };
 
 async function render() {
   const [, name = "", ...rest] = (location.hash || "#/").slice(1).split("/");

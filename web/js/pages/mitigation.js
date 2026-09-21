@@ -1,7 +1,7 @@
-import { h, pageHead, card, table, loadJSON, pct, num, field, numberInput, store, save, baseState, spct } from "../ui.js";
+import { h, pageHead, card, table, loadJSON, pct, num, field, numberInput, segmented, store, save, baseState, spct } from "../ui.js";
 import { buildLives, kaplanMeier, conditionalBreak, summarize, hazardOlderThan } from "../stats.js";
 
-const m = store("pbx.mitigation", { notional: 100, horizon: 1, prob: 3, lgd: 15, cost: 40, ratio: 0, premium: 30, strike: 5, age: 40 });
+const m = store("pbx.mitigation", { notional: 100, horizon: 1, prob: 3, lgd: 15, cost: 40, ratio: 0, premium: 30, strike: 5, age: 40, view: "usd", gbpMove: 0 });
 
 export default async function mitigation() {
   const [data, eps] = await Promise.all([loadJSON("data/processed/regimes.json"), loadJSON("data/processed/episodes.json")]);
@@ -12,71 +12,92 @@ export default async function mitigation() {
   const omr = eps.episodes.find((e) => e.id === "omr-1986");
   const kzt = eps.episodes.find((e) => e.id === "kzt-2015");
   const kztS = kzt?.series.find((s) => s.stats)?.stats;
-
-  const out = h("div");
-  const inputs = {};
+  // sterling over the 12m after each break: % rise in GBP per USD (positive = sterling weaker)
+  const sMoves = events.map((e) => (e.chg_usd && e.chg_gbp && e.chg_usd["12"] != null && e.chg_gbp["12"] != null ? (1 + e.chg_gbp["12"]) / (1 + e.chg_usd["12"]) - 1 : null)).filter((v) => v !== null);
+  const sSum = summarize(sMoves);
   const baseRateP = () => conditionalBreak(km, lives, m.age * 12, Math.round(m.horizon * 12)).p;
-
-  const render = () => {
-    save("pbx.mitigation", m);
-    const N = m.notional, T = m.horizon, p = m.prob / 100, L = m.lgd / 100, c = m.cost / 1e4, hr = m.ratio / 100;
-    const prem = m.premium / 1e4, K = m.strike / 100;
-    const row = (hr2, withOption) => {
-      const unhedged = 1 - hr2;
-      const carry = hr2 * c * N * T;
-      const optCost = withOption ? unhedged * prem * N * T : 0;
-      const lossIfBreak = unhedged * L * N - (withOption ? unhedged * Math.max(0, L - K) * N : 0);
-      const expected = carry + optCost + p * lossIfBreak;
-      return { hr2, carry, optCost, lossIfBreak, expected };
-    };
-    const now = row(hr, false), nowOpt = row(hr, true);
-    const breakeven = (c * T) / L;
-    out.replaceChildren(
-      h("div", { class: "result-row" },
-        h("div", { class: "tile" }, h("div", { class: "label", text: "Expected cost over horizon (hedge carry + probability × loss)" }), h("div", { class: "value", text: `$${num(now.expected, 2)}m` }), h("div", { class: "note", text: `${num((now.expected / N / T) * 1e4, 0)}bp of notional a year` })),
-        h("div", { class: "tile" }, h("div", { class: "label", text: "Loss if the peg breaks" }), h("div", { class: "value", text: `$${num(now.lossIfBreak, 1)}m` }), h("div", { class: "note", text: `at ${m.ratio}% direct hedge, no options` })),
-        h("div", { class: "tile" }, h("div", { class: "label", text: "Break-even break probability" }), h("div", { class: "value", text: pct(breakeven, 1) }), h("div", { class: "note", text: `a direct hedge is cheaper in expectation if P(break over ${T}y) exceeds this` })),
-        h("div", { class: "tile" }, h("div", { class: "label", text: "With tail option on the unhedged part" }), h("div", { class: "value", text: `$${num(nowOpt.lossIfBreak, 1)}m` }), h("div", { class: "note", text: `loss if break; expected cost $${num(nowOpt.expected, 2)}m` }))),
-      h("div", { class: "section" }, table([
-        { label: "Direct hedge ratio", key: "hr2", fmt: (v) => pct(v, 0) },
-        { label: "Hedge carry ($m)", key: "carry", r: true, fmt: (v) => num(v, 2) },
-        { label: "Loss if break ($m)", key: "lossIfBreak", r: true, fmt: (v) => num(v, 1) },
-        { label: "Expected cost ($m)", key: "expected", r: true, fmt: (v) => num(v, 2) },
-        { label: "+ tail option: loss if break", get: (r) => row(r.hr2, true).lossIfBreak, r: true, fmt: (v) => num(v, 1) },
-        { label: "+ tail option: expected cost", get: (r) => row(r.hr2, true).expected, r: true, fmt: (v) => num(v, 2) },
-      ], [0, 0.25, 0.5, 0.75, 1].map((x) => row(x, false)))),
-    );
-  };
-  const inp = (key, label, step, note) => field(label, inputs[key] = numberInput(m[key], (v) => { m[key] = v; render(); }, { step }));
-  const setv = (patch) => { Object.assign(m, patch); for (const k of Object.keys(patch)) if (inputs[k]) inputs[k].value = +(+m[k]).toFixed(2); render(); };
-
   const bp0 = baseRateP();
   const hz30 = hazardOlderThan(lives, 30);
-  const calcCard = h("section", { class: "card" },
-    h("h3", { text: "Proxy hedge vs direct hedge: expected cost and tail" }),
-    h("p", { class: "sub", text: "A USD proxy hedge leaves you exposed to the peg breaking. Hedging the local currency directly removes that but costs the local–USD carry plus wider spreads. Defaults are illustrative placeholders: replace cost and option premium with dealer quotes." }),
-    h("div", { class: "calc" },
-      inp("notional", "Exposure ($m)", "1"), inp("horizon", "Horizon (years)", "0.5"),
-      inp("prob", "P(break over horizon) %", "0.1"), inp("lgd", "Loss if it breaks %", "1"),
-      inp("cost", "Extra cost of direct hedge (bp p.a.)", "5"), inp("ratio", "Direct hedge ratio %", "5"),
-      inp("premium", "Tail option premium (bp p.a.)", "5"), inp("strike", "Option strike, % out of the money", "1")),
-    h("div", { class: "tags", style: { marginTop: "10px" } },
-      h("button", { type: "button", class: "tag", text: `P: Kaplan–Meier for a ${m.age}y peg (${pct(bp0, 1)})`, onclick: () => setv({ prob: +(baseRateP() * 100).toFixed(2) }) }),
-      h("button", { type: "button", class: "tag", text: `P: pooled rate, pegs aged 30y+ (${pct(1 - Math.exp(-hz30.rate * m.horizon), 1)})`, onclick: () => setv({ prob: +((1 - Math.exp(-hz30.rate * m.horizon)) * 100).toFixed(2) }) }),
-      h("button", { type: "button", class: "tag", text: `P: 95% upper bound, 30y+ (${pct(1 - Math.exp(-hz30.ciHi * m.horizon), 1)})`, onclick: () => setv({ prob: +((1 - Math.exp(-hz30.ciHi * m.horizon)) * 100).toFixed(2) }) }),
-      h("button", { type: "button", class: "tag", text: "Loss: Gulf step, ~10% (Oman 1986)", onclick: () => setv({ lgd: 10 }) }),
-      h("button", { type: "button", class: "tag", text: `Loss: median break (${spct(s12.p50, 0)} at 12m)`, onclick: () => setv({ lgd: +(-s12.p50 * 100).toFixed(1) }) }),
-      h("button", { type: "button", class: "tag", text: `Loss: 1-in-4 worst (${spct(s12.p25, 0)})`, onclick: () => setv({ lgd: +(-s12.p25 * 100).toFixed(1) }) }),
-      kztS ? h("button", { type: "button", class: "tag", text: `Loss: oil-exporter float, Kazakhstan (${spct(kztS.chg["12m"], 0)})`, onclick: () => setv({ lgd: +(-kztS.chg["12m"] * 100).toFixed(1) }) }) : null),
-    h("p", { class: "small muted", style: { marginTop: "8px" }, text: `Base-rate probability uses the sample chosen on the "How likely?" page (currently ${baseState.def === "narrow" ? "hard pegs" : "incl. crawling"}, cohort ${baseState.cohort}). It is the unconditional historical rate, not a forecast for any specific currency.` }),
-    out);
-  render();
+
+  const calcBox = h("div");
+  const buildCalc = () => {
+    const gbp = m.view === "gbp";
+    const cur = gbp ? "£" : "$";
+    const out = h("div");
+    const inputs = {};
+    const render = () => {
+      save("pbx.mitigation", m);
+      const N = m.notional, T = m.horizon, p = m.prob / 100, L = m.lgd / 100, c = m.cost / 1e4, hr = m.ratio / 100;
+      const prem = m.premium / 1e4, K = m.strike / 100;
+      const factor = gbp ? 1 + m.gbpMove / 100 : 1; // GBP per USD at the break / at inception
+      const row = (hr2, withOption) => {
+        const unhedged = 1 - hr2;
+        const carry = hr2 * c * N * T;
+        const optCost = withOption ? unhedged * prem * N * T : 0;
+        const lossIfBreak = unhedged * factor * (L * N - (withOption ? Math.max(0, L - K) * N : 0));
+        const expected = carry + optCost + p * lossIfBreak;
+        return { hr2, carry, optCost, lossIfBreak, expected };
+      };
+      const now = row(hr, false), nowOpt = row(hr, true);
+      const breakeven = (c * T) / (L * factor);
+      out.replaceChildren(
+        ...(gbp ? [h("p", { class: "small ink-2", style: { marginTop: "10px" }, text: `GBP shortfall if the peg breaks = ${m.lgd}% loss vs USD × ${factor.toFixed(3)} (GBP per USD at the break ÷ today) = ${pct(L * factor, 1)} of the position's GBP value.` })] : []),
+        h("div", { class: "result-row" },
+          h("div", { class: "tile" }, h("div", { class: "label", text: "Expected cost over horizon (hedge carry + probability × loss)" }), h("div", { class: "value", text: `${cur}${num(now.expected, 2)}m` }), h("div", { class: "note", text: `${num((now.expected / N / T) * 1e4, 0)}bp of notional a year` })),
+          h("div", { class: "tile" }, h("div", { class: "label", text: "Loss if the peg breaks" }), h("div", { class: "value", text: `${cur}${num(now.lossIfBreak, 1)}m` }), h("div", { class: "note", text: `at ${m.ratio}% direct hedge, no options` })),
+          h("div", { class: "tile" }, h("div", { class: "label", text: "Break-even break probability" }), h("div", { class: "value", text: pct(breakeven, 1) }), h("div", { class: "note", text: `a direct hedge is cheaper in expectation if P(break over ${T}y) exceeds this` })),
+          h("div", { class: "tile" }, h("div", { class: "label", text: "With tail option on the unhedged part" }), h("div", { class: "value", text: `${cur}${num(nowOpt.lossIfBreak, 1)}m` }), h("div", { class: "note", text: `loss if break; expected cost ${cur}${num(nowOpt.expected, 2)}m` }))),
+        h("div", { class: "section" }, table([
+          { label: "Direct hedge ratio", key: "hr2", fmt: (v) => pct(v, 0) },
+          { label: `Hedge carry (${cur}m)`, key: "carry", r: true, fmt: (v) => num(v, 2) },
+          { label: `Loss if break (${cur}m)`, key: "lossIfBreak", r: true, fmt: (v) => num(v, 1) },
+          { label: `Expected cost (${cur}m)`, key: "expected", r: true, fmt: (v) => num(v, 2) },
+          { label: "+ tail option: loss if break", get: (r) => row(r.hr2, true).lossIfBreak, r: true, fmt: (v) => num(v, 1) },
+          { label: "+ tail option: expected cost", get: (r) => row(r.hr2, true).expected, r: true, fmt: (v) => num(v, 2) },
+        ], [0, 0.25, 0.5, 0.75, 1].map((x) => row(x, false)))),
+      );
+    };
+    const inp = (key, label, step) => field(label, inputs[key] = numberInput(m[key], (v) => { m[key] = v; render(); }, { step }));
+    const setv = (patch) => { Object.assign(m, patch); for (const k of Object.keys(patch)) if (inputs[k]) inputs[k].value = +(+m[k]).toFixed(2); render(); };
+    const tag = (text, patch) => h("button", { type: "button", class: "tag", text, onclick: () => setv(patch) });
+
+    calcBox.replaceChildren(h("section", { class: "card" },
+      h("div", { class: "card-head" }, h("h3", { text: "Proxy hedge vs direct hedge: expected cost and tail" }),
+        segmented([["usd", "USD-based investor"], ["gbp", "GBP investor, USD proxy hedge"]], m.view, (v) => { m.view = v; save("pbx.mitigation", m); buildCalc(); }, "Investor base")),
+      h("p", { class: "sub", text: gbp
+        ? "A GBP investor hedging QAR/SAR/AED assets with USD/GBP forwards. A direct local/GBP hedge costs roughly the local–USD rate differential more than the proxy, because the GBP leg is common to both. If the peg breaks, the shortfall is the local currency's loss against USD, converted at the GBP/USD rate prevailing then: sterling weakness enlarges it and sterling strength shrinks it. Defaults are illustrative; replace cost and premium with dealer quotes."
+        : "A USD proxy hedge leaves you exposed to the peg breaking. Hedging the local currency directly removes that but costs the local–USD carry plus wider spreads. Defaults are illustrative placeholders: replace cost and option premium with dealer quotes." }),
+      h("div", { class: "calc" },
+        inp("notional", `Exposure (${cur}m)`, "1"), inp("horizon", "Horizon (years)", "0.5"),
+        inp("prob", "P(break over horizon) %", "0.1"), inp("lgd", "Loss vs USD if it breaks %", "1"),
+        ...(gbp ? [inp("gbpMove", "Sterling at the break: % rise in GBP per USD (+ = sterling weaker)", "1")] : []),
+        inp("cost", "Extra cost of direct hedge (bp p.a.)", "5"), inp("ratio", "Direct hedge ratio %", "5"),
+        inp("premium", "Tail option premium (bp p.a.)", "5"), inp("strike", "Option strike, % out of the money", "1")),
+      h("div", { class: "tags", style: { marginTop: "10px" } },
+        tag(`P: Kaplan–Meier for a ${m.age}y peg (${pct(bp0, 1)})`, { prob: +(bp0 * 100).toFixed(2) }),
+        tag(`P: pooled rate, pegs aged 30y+ (${pct(1 - Math.exp(-hz30.rate * m.horizon), 1)})`, { prob: +((1 - Math.exp(-hz30.rate * m.horizon)) * 100).toFixed(2) }),
+        tag(`P: 95% upper bound, 30y+ (${pct(1 - Math.exp(-hz30.ciHi * m.horizon), 1)})`, { prob: +((1 - Math.exp(-hz30.ciHi * m.horizon)) * 100).toFixed(2) }),
+        tag("Loss: Gulf step, ~10% (Oman 1986)", { lgd: 10 }),
+        tag(`Loss: median break (${spct(s12.p50, 0)} at 12m)`, { lgd: +(-s12.p50 * 100).toFixed(1) }),
+        tag(`Loss: 1-in-4 worst (${spct(s12.p25, 0)})`, { lgd: +(-s12.p25 * 100).toFixed(1) }),
+        kztS ? tag(`Loss: oil-exporter float, Kazakhstan (${spct(kztS.chg["12m"], 0)})`, { lgd: +(-kztS.chg["12m"] * 100).toFixed(1) }) : null),
+      ...(gbp ? [h("div", { class: "tags", style: { marginTop: "6px" } },
+        tag("Sterling: unchanged", { gbpMove: 0 }),
+        tag(`Sterling: median after past breaks (${spct(sSum.p50, 1)} GBP per USD)`, { gbpMove: +(sSum.p50 * 100).toFixed(1) }),
+        tag(`Sterling: 1-in-4 weakest (${spct(sSum.p75, 0)})`, { gbpMove: +(sSum.p75 * 100).toFixed(1) }),
+        tag("Sterling: 15% weaker vs USD (Brexit-vote scale)", { gbpMove: +((1 / 0.85 - 1) * 100).toFixed(1) }),
+        tag("Sterling: 10% stronger vs USD", { gbpMove: +((1 / 1.1 - 1) * 100).toFixed(1) }))] : []),
+      h("p", { class: "small muted", style: { marginTop: "8px" }, text: `Base-rate probability uses the sample chosen on the "How likely?" page (currently ${baseState.def === "narrow" ? "hard pegs" : "incl. crawling"}, cohort ${baseState.cohort}, ${baseState.direction === "up" ? "strengthening" : baseState.direction === "both" ? "any" : "weakening"} breaks). It is the unconditional historical rate, not a forecast for any specific currency.` }),
+      out));
+    render();
+  };
+  buildCalc();
 
   const play = (title, items) => h("section", { class: "card" }, h("h3", { text: title }), h("ul", { class: "prose", style: { paddingLeft: "18px", margin: 0 } }, items.map((t) => h("li", { html: t }))));
 
   return h("div", {},
     pageHead("What else can I do?", "The hedging choice is a trade-off between a known carry cost and a small-probability jump loss. The rest of the toolkit is about keeping options open before stress arrives, because liquidity and even the rules can change once it does."),
-    calcCard,
+    calcBox,
     h("div", { class: "grid grid-2 section" },
       play("1 · Decide in calm, not in stress", [
         "Stress costs rise non-linearly: in 2016 SAR forwards and options repriced sharply and SAMA told banks to stop selling options on riyal forwards. The cheapest time to buy tail protection or set up lines is when nobody wants them.",
