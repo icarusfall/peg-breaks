@@ -127,6 +127,15 @@ def main():
     tables["gulf_timeline"] = (pd.DataFrame(cur["timeline"]), f"2026 timeline as of {cur['as_of']}, with sources.")
     tables["gulf_key_points"] = (pd.DataFrame(cur["key_points"]), f"Briefing key points as of {cur['as_of']}.")
 
+    scr_path = PROCESSED / "screen.json"
+    if scr_path.exists():
+        scr = load(scr_path)
+        tables["peg_screen"] = (pd.DataFrame(scr["current"]),
+            "Every peg still standing at the latest data, with drift inside its band, move since the 2019 reference level, "
+            "peg age, and curated Gulf buffers.")
+        tables["drift_signal_test"] = (pd.json_normalize(scr["signal_test"]),
+            "Measured performance of the drift indicator: hit rate, false-alarm rate, noise-to-signal ratio and lead time.")
+
     readme = pd.DataFrame(
         [{"table": "README", "rows": None, "description": f"Peg Break Explorer dataset, generated {date.today().isoformat()}. Research use only; not investment advice."},
          {"table": "sources", "rows": None, "description": "Ilzetzki, Reinhart & Rogoff (2019, 2021) de facto regime classification (cite); BIS US dollar exchange rates "

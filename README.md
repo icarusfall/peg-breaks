@@ -9,6 +9,8 @@ A research tool for portfolio managers who **proxy-hedge pegged currencies** (SA
 | **Early signals** | Any clues it's imminent? | Forward-points implied-probability calculator, signal checklist with false-alarm history and a Sept 2026 Gulf reading, literature |
 | **Mitigation** | What else can I do? | Direct-vs-proxy hedge cost/tail calculator, and a playbook covering triggers, tail options, settlement/fixing risk, correlated hedges and scenarios |
 | **Gulf 2026** | What's going on now? | Hormuz-closure briefing, GCC scorecard, onshore vs offshore-proxy peg monitor, Brent, timeline, sources |
+| **Portfolio** | What does it cost me? | Stress panel: your positions and hedge ratios under each break scenario, in sterling, with the carry cost of the hedges you set |
+| **Screen** | Which pegs look shaky? | Every surviving peg ranked on drift inside its band, with that indicator's measured hit rate, false-alarm rate and lead time |
 | **Data** | Can I have the numbers? | One-click XLSX or zipped-CSV download of every table (spells, break paths, episodes, Gulf monitor, briefing) |
 | **Episodes** | What actually happened? | 42 curated breaks, near misses and edge cases (Qatar 2017 offshore dislocation, Lebanon's "held" peg, Bolivia 2026, Oman 1986, Kazakhstan 2015, CHF 2015 …) |
 
@@ -45,8 +47,13 @@ python fetch_raw.py          # add --force to re-download
 python build_regimes.py
 python build_episodes.py
 python build_gcc.py
+python build_screen.py       # vulnerability screen + signal test
 python build_downloads.py    # XLSX + CSV bundles for the Data page
+python check_alerts.py       # monitor checks -> alerts.json
 ```
+
+`.github/workflows/refresh.yml` runs all of this on the 2nd of each month (and on demand), commits any
+changed `data/processed`, and opens an issue if a check trips. Add `FRED_API_KEY` as a repository secret.
 
 Then update `data/curated/*.json` by hand as events develop and commit `data/processed/`.
 

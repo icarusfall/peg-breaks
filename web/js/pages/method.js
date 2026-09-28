@@ -56,7 +56,10 @@ python fetch_raw.py            # IRR, BIS bulk, Yahoo (+ FRED API if key set)
 python build_regimes.py
 python build_episodes.py
 python build_gcc.py
-python build_downloads.py</code></pre>
+python build_screen.py
+python build_downloads.py
+python check_alerts.py</code></pre>
+        <p>A GitHub Actions workflow runs this monthly, commits changed data (Railway redeploys on push) and opens an issue when a check trips: an onshore Gulf rate more than 25bp from parity, a persistent offshore gap, stale BIS data, or a briefing older than 45 days.</p>
         <p>Update <code>data/curated/current.json</code> and <code>episodes.json</code> by hand as events develop, then commit <code>data/processed</code>. Railway redeploys on push.</p>`),
     ),
     h("div", { class: "section" }, card({

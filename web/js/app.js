@@ -9,9 +9,11 @@ import episodes from "./pages/episodes.js";
 import mitigation from "./pages/mitigation.js";
 import method from "./pages/method.js";
 import data from "./pages/data.js";
+import portfolio from "./pages/portfolio.js";
+import screen from "./pages/screen.js";
 
-const routes = { "": home, gulf, likelihood, impact, signals, episodes, episode: episodes, mitigation, method, data };
-const TITLES = { "": "Peg Break Explorer", gulf: "Gulf 2026", likelihood: "How likely?", impact: "How bad?", signals: "Early signals", episodes: "Episodes", episode: "Episode", mitigation: "Mitigation", method: "Method", data: "Download data" };
+const routes = { "": home, gulf, likelihood, impact, signals, episodes, episode: episodes, portfolio, screen, mitigation, method, data };
+const TITLES = { "": "Peg Break Explorer", gulf: "Gulf 2026", likelihood: "How likely?", impact: "How bad?", signals: "Early signals", episodes: "Episodes", episode: "Episode", portfolio: "Portfolio", screen: "Screen", mitigation: "Mitigation", method: "Method", data: "Download data" };
 
 async function render() {
   const [, name = "", ...rest] = (location.hash || "#/").slice(1).split("/");
@@ -49,6 +51,16 @@ navToggle.addEventListener("click", () => {
   const nav = document.getElementById("nav");
   nav.classList.toggle("open");
   navToggle.setAttribute("aria-expanded", String(nav.classList.contains("open")));
+});
+
+// Monitoring banner: refresh checks and data staleness
+Promise.all([loadJSON("data/processed/alerts.json").catch(() => null), loadJSON("data/processed/regimes.json")]).then(([al, reg]) => {
+  const msgs = (al?.alerts || []).filter((a) => a.level !== "low").map((a) => a.message);
+  const days = Math.round((Date.now() - Date.parse(reg.meta.generated)) / 864e5);
+  if (days > 45) msgs.push(`Data last rebuilt ${days} days ago (${reg.meta.generated}); the monthly refresh may not have run.`);
+  if (!msgs.length) return;
+  const bar = h("div", { class: "banner" }, h("strong", { text: "Monitor: " }), h("span", { text: msgs.join(" · ") }));
+  document.querySelector(".site-header").after(bar);
 });
 
 // FRED API terms require this notice whenever FRED-sourced data is displayed
